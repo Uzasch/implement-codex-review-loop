@@ -9,7 +9,7 @@
     {
       "name": "uzasch-skills",
       "source": "./",
-      "description": "Uzair's agent skills — implement-and-review loops driven through Codex, and more to come.",
+      "description": "Uzair's agent skills \u2014 implement-and-review loops driven through Codex, and more to come.",
       "category": "engineering",
       "keywords": [
         "engineering",
@@ -27,6 +27,18 @@
       "description": "Upstream, unmodified: coordinate reusable monitored OpenAI Codex agents from Claude Code. MIT, by alexzh3. Listed here only so uzasch-skills can auto-install it as a dependency.",
       "author": {
         "name": "alexzh3"
+      }
+    },
+    {
+      "name": "mattpocock-skills",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/mattpocock/skills.git"
+      },
+      "description": "Upstream, unmodified: Matt Pocock's agent skills for real engineering. MIT, by Matt Pocock. Listed here so uzasch-skills can auto-install the implement/tdd/code-review skills it builds on.",
+      "author": {
+        "name": "Matt Pocock",
+        "url": "https://www.aihero.dev"
       }
     }
   ]

@@ -20,8 +20,8 @@ SSH key, even though this repo is public.
 Matt Pocock's `/implement` with two things added: a **Codex review loop**, and an **orchestrator
 for specs too big for one context**.
 
-- **Implement** — build against the pinned spec, TDD at pre-agreed seams, then self-review on the
-  two axes (Standards, Spec) and commit. This is the `/implement` + `/code-review` pass, inlined.
+- **Implement** — calls his `/implement` unchanged, which runs `/tdd` at the seams and ends in his
+  two-axis `/code-review` and a commit. Nothing is reimplemented here; that skill owns the build.
 - **Codex loop** — Codex reviews the committed diff independently, in one persistent session that
   remembers what it already asked for. Claude triages every finding against the ADRs and the
   originating issue, fixes what it accepts, and answers back. Repeats until Codex approves or the
@@ -35,8 +35,12 @@ for specs too big for one context**.
 
 Ends with a drift report: everything built beyond the issue and beyond the ADRs.
 
-Self-contained — it calls neither `/implement` nor `/code-review`, so no other skills plugin needs
-to be installed.
+Install `uzasch-skills` and both dependencies come with it: `mattpocock-skills` for the build and
+review skills, `codex-orchestrator` for the journal contract and Codex process control. You do not
+add either marketplace yourself.
+
+Phase 1 is 14 lines because his `/implement` does the work. The other ~480 are the Codex loop, the
+fan-out, and the orchestration contract — the parts he does not have.
 
 `codex-skill/` inside it is the **Codex-side** reviewer, not a Claude skill. Codex discovers it by
 name from `~/.codex/skills/`, so the loop symlinks it there during setup. Nothing to install by
@@ -44,8 +48,8 @@ hand, and it never appears in Claude's skill picker.
 
 ## Requirements
 
-`codex-orchestrator` is declared as a dependency and installs automatically. You also need the
-`codex` CLI (authenticated), `gh`, and `python3` on the machine.
+`codex-orchestrator` and `mattpocock-skills` are declared dependencies and install automatically.
+You also need the `codex` CLI (authenticated), `gh`, and `python3` on the machine.
 
 ## Adding a skill
 
@@ -71,10 +75,10 @@ falls back to `main`.
 
 ## Credits
 
-This is [Matt Pocock's](https://github.com/mattpocock/skills) `/implement` and `/code-review` (MIT)
-reworked into one skill — the build discipline, the two-axis Standards/Spec split, and the Fowler
-smell baseline are all his. No files from that repo ship here; the content is inlined and rewritten
-so the skill stands alone.
+The build and review are [Matt Pocock's](https://github.com/mattpocock/skills) `/implement`,
+`/tdd` and `/code-review` (MIT), installed from upstream and called unchanged. This repo adds the
+Codex loop and the fan-out around them. `codex-skill/references/smell-baseline.md` is the one
+derived file, carried because Codex cannot read Claude's skills.
 
 `codex-orchestrator` is [alexzh3's](https://github.com/alexzh3/codex-orchestrator), MIT, fetched
 from upstream as a dependency rather than vendored.

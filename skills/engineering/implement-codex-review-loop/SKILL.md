@@ -37,6 +37,10 @@ REPO="$(git rev-parse --show-toplevel)"
 `PLUGIN_ROOT` must be non-empty — if it is, the `codex-orchestrator` plugin is not installed and
 this skill cannot run. Say so and stop; do not improvise the contract it owns.
 
+This skill also needs the `implement`, `tdd` and `code-review` skills from `mattpocock-skills`,
+which installs as a declared dependency. If `implement` is not available, stop and say so rather
+than improvising a build phase — Phase 1 is deliberately thin because that skill owns it.
+
 Publish this skill's own Codex-side reviewer so `codex` can find it by name. Idempotent, safe to
 re-run every time:
 
@@ -135,46 +139,16 @@ the Codex prompt rather than letting Codex invent one.
 
 ## Phase 1 — Implement
 
-Build the work against the spec you pinned above. This phase delegates to nothing — do not invoke
-`implement`, `code-review`, or any other skill for it.
+Invoke the **`implement`** skill from `mattpocock-skills` and follow it. It uses `/tdd` at
+pre-agreed seams, typechecks and runs tests as it goes, ends with its own two-axis `/code-review`,
+and commits. Let it do all of that — Codex must review *self-reviewed, committed* work, not a first
+draft.
 
-### Build
+Two constraints it does not know about, which still bind here:
 
-- Use TDD at pre-agreed seams: name the seam, write the failing test, watch it fail, make it pass.
-  Where there is no clean seam, write the code and cover it after — do not stage a fake red phase.
-- Typecheck and run the single relevant test file often. Run the **full** suite once, at the end.
-- Stage by explicit path. The dirty-tree rule from *Setup* still binds: never `git commit -a`.
-
-### Self-review
-
-Review your own diff on the same two axes Codex will use, so round 1 is spent on real defects
-rather than ones you could have caught yourself. Run both as **parallel sub-agents** so they cannot
-pollute each other's context.
-
-**Standards** — give the sub-agent the diff command and commit list, whichever standards files the
-repo actually has (`CLAUDE.md`, `CONTRIBUTING.md`, `CODING_STANDARDS.md`), and the full text of
-`$SELF_ROOT/skills/engineering/implement-codex-review-loop/codex-skill/references/smell-baseline.md` pasted in — a
-sub-agent has no other access to it. Brief it to report where the diff breaks a documented standard
-(citing the rule) and any baseline smell (naming it, quoting the hunk). A documented repo standard
-overrides the baseline, baseline smells are always judgement calls, and anything tooling already
-enforces is out of scope.
-
-**Spec** — give it the diff command, the commit list, and the acceptance criteria you pinned.
-Brief it to report requirements that are missing or partial, behaviour in the diff nobody asked
-for, and requirements that look implemented but are implemented wrong — quoting the spec line for
-each. If there is no spec, skip this axis and say so rather than inventing one.
-
-Keep the two reports separate. Do not merge or rerank them: a change can follow every standard
-while implementing the wrong thing, or do exactly what the issue asked while breaking the repo's
-conventions, and reporting them together lets one mask the other.
-
-Fix what you accept. **This report is yours alone** — the *Withhold from round 1* rule below means
-Codex never sees it. A primed reviewer is not an independent one.
-
-### Commit
-
-Commit to the current branch, by explicit path. Codex must review *self-reviewed, committed* work,
-not a first draft.
+- Stage by explicit path. The dirty-tree rule from *Setup* holds: never `git commit -a`.
+- **Its `/code-review` output is yours alone.** The *Withhold from round 1* rule below means Codex
+  never sees it. A primed reviewer is not an independent one.
 
 Record the resulting commits. Append `verification` entries for the checks you actually ran
 (typecheck, test suite) — your observed output, not a claim.
@@ -278,8 +252,8 @@ returning `blocked` keeps its task blocked, and Phase 2 does not start until you
 slice whose diff exceeds roughly twice its estimate gets read line by line.
 
 Only your own observations become `verification` entries; a subagent's `commands` array goes in
-the `execution_result` and nowhere else. Then commit per slice in slice order, run the **Self-review**
-from Phase 1 over the merged result, and enter Phase 2 with one linear `BASE...HEAD`.
+the `execution_result` and nowhere else. Then commit per slice in slice order, run `/code-review`
+over the merged result, and enter Phase 2 with one linear `BASE...HEAD`.
 
 ## Phase 2 — The Codex loop
 
@@ -319,7 +293,7 @@ recoverable from the diff:
   class fan-out manufactures, and Codex cannot see the boundary in a merged diff.
 
 Withhold from round 1, per `$PLUGIN_ROOT/skills/orchestrate/references/review.md`: your Phase 1
-self-review report, every implementation handoff (yours and every subagent's), all test claims,
+`/code-review` output, every implementation handoff (yours and every subagent's), all test claims,
 and any tentative conclusion. A primed reviewer is not an independent one. Independence is
 preserved by withholding the reports, not the map.
 
