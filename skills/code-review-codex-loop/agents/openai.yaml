@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code Review Codex (loop)"
+  short_description: "Independent two-axis standards and spec review for Claude-Codex loops"
+  default_prompt: "Use $code-review-codex-loop to review <base>...<head> against repository standards and the originating spec, and end with a VERDICT line."

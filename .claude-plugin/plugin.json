@@ -1,0 +1,17 @@
+{
+  "name": "implement-codex-review-loop",
+  "description": "Implement a PRD or set of issues, then harden it in a Claude<->Codex review loop until Codex approves.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Uzair"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/Uzasch/implement-codex-review-loop",
+  "keywords": [
+    "codex",
+    "code-review",
+    "claude-code",
+    "workflow",
+    "implementation"
+  ]
+}
