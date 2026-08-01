@@ -215,7 +215,8 @@ Everything happens in the one repo worktree. Use `isolation:'worktree'` **only**
 a repo-wide mutating tool (formatter, codemod, migration) or two slices rewrite call sites in the
 same file; then merge `--no-ff` in slice order, never `-X ours/theirs`, and after three
 hand-resolved conflicts abandon the rest and finish serially. A conflict means the partition was
-wrong. Worktrees do not fix a shared DB, port, or BQ dataset — serialise those slices instead.
+wrong. Worktrees do not fix a shared database, port, or cloud dataset — serialise those slices
+instead.
 
 ### Journal
 
@@ -236,9 +237,9 @@ Slice test runs are void the moment slices integrate.
 - **Red-proof replay** — re-run every test a slice added, at the seam commit, and confirm it fails
   there. One that passes against pre-slice code is dead; rewrite it. This is the seam where you
   stay the verifier.
-- Full suite, typecheck, and `ruff check --statistics` / `cd frontend && npx eslint src/` as deltas
-  against the `CLAUDE.md` baseline tables. **The workflow must never run the full suite** —
-  parallel agents share the DB, ports, and BQ credentials.
+- Full suite, typecheck, and each linter the repo documents — as **deltas** against any baseline
+  it records, not as absolute pass/fail. **The workflow must never run the full suite** — parallel
+  agents share databases, ports, and credentials.
 - Read every hunk of `BASE...HEAD`.
 
 A slice returning `files_written: []` is `failed`, not "nothing to do". So is a null agent (no
@@ -275,8 +276,8 @@ contents into the prompt.
 
 - The goal and the full acceptance criteria (the pinned spec text or issue body).
 - The exact SHAs: `git diff <BASE>...<HEAD>`, and the commit list.
-- Binding constraints it must respect: the repo's `CLAUDE.md` lint baselines, relevant ADR
-  numbers under `docs/adr/`, the Python interpreter, the forbidden commands.
+- Binding constraints it must respect: whatever `CLAUDE.md`/`AGENTS.md` records — lint baselines,
+  the interpreter, forbidden commands — and the relevant ADR numbers if the repo keeps them.
 
 **After a Phase 1b fan-out**, round 1 also carries two *structural facts* — not claims, and not
 recoverable from the diff:
@@ -363,9 +364,9 @@ For each finding, in order:
 3. **Check it against the issue.** Re-read the pinned acceptance criteria. A finding demanding
    behaviour the issue did not ask for is `REJECTED: out of scope` — or `DEFERRED`, filed as a
    new issue per `docs/agents/issue-tracker.md`, when it is genuinely worth doing later.
-4. **Check it against the project rules.** `CLAUDE.md` binds here: a finding that demands a clean
-   `ruff`/`eslint` run, or a fix in a file this ticket does not touch, is `REJECTED` citing the
-   documented baseline.
+4. **Check it against the project rules.** `CLAUDE.md`/`AGENTS.md` binds: where the repo records a
+   pre-existing lint baseline, a finding that demands a clean run of that linter — or a fix in a
+   file this ticket does not touch — is `REJECTED`, citing the documented baseline.
 5. Otherwise: **ACCEPT**.
 
 Record consequential accepts and every rejection as a `decision` entry (`outcome:
@@ -383,10 +384,11 @@ defect is, so the disjoint-ownership precondition no longer holds; and the `F<n>
 line you send Codex has to be a line you wrote, with nothing unread between it and the diff Codex
 re-verifies. The round cap does not rise to absorb fan-out damage either.
 
-Typecheck and run the touched tests as you go; run the full suite before committing. Check
-`ruff check --statistics` and `cd frontend && npx eslint src/` against the `CLAUDE.md` baseline
-tables — your work is clean when it adds no new rule code and no new count, not when the run is
-green. Never run `npm run build`.
+Typecheck and run the touched tests as you go; run the full suite before committing. Run each
+linter the repo documents, and read the result as a **delta**: where `CLAUDE.md` records a
+pre-existing baseline, your work is clean when it adds no new rule and no new count — not when the
+run is green. Honour any command the repo forbids; some build steps overwrite an artefact that is
+actually being served.
 
 Commit with the round in the message (`fix(review r2): …`). Append a `verification` entry per
 criterion you checked, with the exact command and what you observed.
