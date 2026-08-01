@@ -1,7 +1,7 @@
 {
   "name": "implement-codex-review-loop",
   "description": "Implement a PRD or set of issues, then harden it in a Claude<->Codex review loop until Codex approves.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "dependencies": [
     "codex-orchestrator"
   ],

@@ -8,9 +8,14 @@ what it accepts, and answers back. Repeats until Codex approves or the round cap
 ## Install
 
 ```
-/plugin marketplace add Uzasch/implement-codex-review-loop
+/plugin marketplace add https://github.com/Uzasch/implement-codex-review-loop.git
 /plugin install implement-codex-review-loop@implement-codex-review-loop
 ```
+
+Use the full `https://` URL, not the `Uzasch/implement-codex-review-loop` shorthand. The shorthand
+resolves to `git@github.com:` and fails with `Permission denied (publickey)` on any machine without
+a GitHub SSH key, even though this repo is public. For the same reason the `codex-orchestrator`
+entry below uses a `url` source rather than a `github` one.
 
 That is the whole install. `codex-orchestrator` is declared as a dependency and is pulled in
 automatically — you do not add its marketplace or install it yourself.
