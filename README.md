@@ -15,20 +15,37 @@ SSH key, even though this repo is public.
 
 ### engineering
 
-| Skill | What it does |
-| :--- | :--- |
-| `implement-codex-review-loop` | Implement a PRD or set of issues, then harden it in a Claude↔Codex review loop until Codex approves. |
-| `implement` | Build the work described by a PRD or set of issues, TDD where there are seams, ending in a self-review and a commit. |
+**`/implement-codex-review-loop <issue #s | PRD path> [--rounds N] [--base ref] [--fanout]`**
 
-`skills/engineering/code-review-codex-loop/` ships too but is deliberately **not** in the plugin's
-`skills` array: it is a *Codex-side* skill, discovered by the `codex` CLI from `~/.codex/skills/`.
-`implement-codex-review-loop` symlinks it there during setup. Listing it would put a useless
-`/code-review-codex-loop` in Claude's own skill picker.
+Matt Pocock's `/implement` with two things added: a **Codex review loop**, and an **orchestrator
+for specs too big for one context**.
+
+- **Implement** — build against the pinned spec, TDD at pre-agreed seams, then self-review on the
+  two axes (Standards, Spec) and commit. This is the `/implement` + `/code-review` pass, inlined.
+- **Codex loop** — Codex reviews the committed diff independently, in one persistent session that
+  remembers what it already asked for. Claude triages every finding against the ADRs and the
+  originating issue, fixes what it accepts, and answers back. Repeats until Codex approves or the
+  round cap is hit. Claude's own self-review is deliberately withheld from Codex — a primed
+  reviewer is not an independent one.
+- **Orchestrator (ultracode)** — a spec too large for one context is fanned out across parallel
+  agents via the Workflow tool, behind a size gate, with a slice map and a seams list so
+  cross-slice inconsistency is reviewable as a Standards finding. Opt-in via `--fanout`; without
+  it the skill sizes the issue, proposes the split, and stops for an answer rather than spending a
+  fleet on its own initiative.
+
+Ends with a drift report: everything built beyond the issue and beyond the ADRs.
+
+Self-contained — it calls neither `/implement` nor `/code-review`, so no other skills plugin needs
+to be installed.
+
+`codex-skill/` inside it is the **Codex-side** reviewer, not a Claude skill. Codex discovers it by
+name from `~/.codex/skills/`, so the loop symlinks it there during setup. Nothing to install by
+hand, and it never appears in Claude's skill picker.
 
 ## Requirements
 
-`implement-codex-review-loop` additionally needs the `codex` CLI (authenticated), `gh`, and
-`python3`. `codex-orchestrator` is declared as a dependency and installs automatically.
+`codex-orchestrator` is declared as a dependency and installs automatically. You also need the
+`codex` CLI (authenticated), `gh`, and `python3` on the machine.
 
 ## Adding a skill
 
@@ -37,14 +54,27 @@ SSH key, even though this repo is public.
 3. Bump `version` in `plugin.json` so installed copies pick it up.
 4. `claude plugin validate . --strict`
 
-The array is required rather than optional here: the default scan only finds `skills/<name>/SKILL.md`
+The array is required rather than optional: the default scan only finds `skills/<name>/SKILL.md`
 one level deep, so nothing under a category directory is auto-discovered. The upside is that
-`skills/in-progress/` is a real staging area — a skill sitting there is version-controlled but not
-shipped until you list it.
+`skills/in-progress/` is a real staging area — a skill can sit there version-controlled but
+unshipped until you list it.
+
+## Repo assumptions
+
+`implement-codex-review-loop` carries rules specific to `Uzasch/video-compilation2.0` stated as
+facts about that repo, not universals — the live-systemd-units hazard, the normally-dirty working
+tree, `docs/agents/issue-tracker.md`, the `CLAUDE.md` lint baselines, `docs/adr/`. Elsewhere they
+read as harmless context; edit them if they get in the way.
+
+The trunk is resolved from `origin/HEAD` and the skill stops to ask if that is unset. It never
+falls back to `main`.
 
 ## Credits
 
-- `skills/engineering/implement` — from [Matt Pocock's skills](https://github.com/mattpocock/skills)
-  (MIT), which this repo's layout and the `/implement` + `/code-review` conventions follow.
-- `codex-orchestrator` — [alexzh3](https://github.com/alexzh3/codex-orchestrator) (MIT). Fetched
-  from upstream as a dependency, not vendored.
+This is [Matt Pocock's](https://github.com/mattpocock/skills) `/implement` and `/code-review` (MIT)
+reworked into one skill — the build discipline, the two-axis Standards/Spec split, and the Fowler
+smell baseline are all his. No files from that repo ship here; the content is inlined and rewritten
+so the skill stands alone.
+
+`codex-orchestrator` is [alexzh3's](https://github.com/alexzh3/codex-orchestrator), MIT, fetched
+from upstream as a dependency rather than vendored.
