@@ -63,15 +63,20 @@ one level deep, so nothing under a category directory is auto-discovered. The up
 `skills/in-progress/` is a real staging area — a skill can sit there version-controlled but
 unshipped until you list it.
 
-## Repo assumptions
+## What it expects from a repo
 
-`implement-codex-review-loop` carries rules specific to `Uzasch/video-compilation2.0` stated as
-facts about that repo, not universals — the live-systemd-units hazard, the normally-dirty working
-tree, `docs/agents/issue-tracker.md`, the `CLAUDE.md` lint baselines, `docs/adr/`. Elsewhere they
-read as harmless context; edit them if they get in the way.
+Nothing hardcoded — the skill names no repo, branch, service, or interpreter. It reads them:
 
-The trunk is resolved from `origin/HEAD` and the skill stops to ask if that is unset. It never
-falls back to `main`.
+- **Trunk** from `origin/HEAD`, and it stops to ask when that is unset. It never infers the trunk
+  from a branch name and never falls back to `main`/`master` — a repo can carry an abandoned `main`
+  next to a differently-named default branch, and diffing against the wrong one hands the reviewer
+  months of unrelated commits.
+- **Interpreter, test, lint and forbidden build commands** from the repo's `CLAUDE.md`, including
+  any pre-existing lint baseline it records.
+- **Issues** from `docs/agents/issue-tracker.md` if present, otherwise `gh` / the PRD path you pass.
+- **Live services** — if a timer, worker, or dev server runs off the working tree, the skill offers
+  to stop it or build in a worktree rather than deciding for you. Name those units in your
+  `CLAUDE.md` so it does not have to guess.
 
 ## Credits
 

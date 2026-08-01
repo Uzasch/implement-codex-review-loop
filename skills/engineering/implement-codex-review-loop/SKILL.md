@@ -55,10 +55,11 @@ it: add `/.codex-orchestrator/` to the local git exclude (never `.gitignore`), c
 exclude checks pass, and capture the baseline HEAD, branch, and `git status --short
 --untracked-files=all`. Treat already-dirty paths as pre-existing user work — do not claim them.
 
-This working tree is **normally dirty** (brand `log.md` files, `MEMORY.md`, data backups). Stage
-by explicit path and never `git commit -a` — sweeping those into a commit puts them inside
-`BASE...HEAD`, and Codex will review, and raise findings on, work that was never yours. If the
-issue genuinely needs to touch a file that was already dirty, ask the user before claiming it.
+Some repos carry a permanently dirty working tree — generated logs, agent memory files, data
+backups. Stage by explicit path and never `git commit -a`: sweeping those into a commit puts them
+inside `BASE...HEAD`, and Codex will review, and raise findings on, work that was never yours. If
+the issue genuinely needs a file that was already dirty at *Setup*, ask the user before claiming
+it.
 
 Create the run and its journal:
 
@@ -74,10 +75,9 @@ every field and the closure semantics. Record `claude_version` and `codex --vers
 
 ### Resolving BASE
 
-**Never infer the trunk from a branch name, and never fall back to `main`/`master`.** On
-`video-compilation2.0` the trunk is `native-ubuntu-pc1`; a `main` branch still exists there and is
-hundreds of commits stale, so diffing against it would hand Codex months of unrelated work as
-though it were this change. Resolve it, don't assume it:
+**Resolve the trunk, never assume it.** The default branch is often not `main`, and a repo can
+carry an abandoned `main` alongside a differently-named default — diff against the wrong one and
+you hand Codex months of unrelated commits as though they were this change:
 
 ```bash
 TRUNK="$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||')"
@@ -85,14 +85,13 @@ git rev-parse --verify "$TRUNK"
 ```
 
 If `TRUNK` comes back empty (no `origin/HEAD` on this clone), **ask the user which branch is the
-trunk** — do not guess, and do not run `git remote set-head` to invent an answer. One wrong trunk
-costs a whole review round.
+trunk.** Do not infer it from branch names, do not fall back to `main`/`master`, and do not run
+`git remote set-head` to invent an answer. One wrong trunk costs a whole review round.
 
 Then, unless `--base` was passed:
 
-- **On the trunk itself** (the usual case here — work happens directly on `native-ubuntu-pc1`):
-  `BASE="$(git rev-parse HEAD)"`, captured **before you write a line of code**. The loop reviews
-  exactly what this run builds.
+- **On the trunk itself**: `BASE="$(git rev-parse HEAD)"`, captured **before you write a line of
+  code**. The loop reviews exactly what this run builds.
 - **On a feature or worktree branch** (`issue/NN`, `worktree/*`, `feat/*`):
   `BASE="$(git merge-base "$TRUNK" HEAD)"`.
 
@@ -102,32 +101,27 @@ paying Codex to read them.
 
 ### Working directly on the trunk — the live-services hazard
 
-Seven systemd units run **from this checkout**, and `video-compilation-cadence-dev.timer` launches
-a fresh one-shot every 30 minutes that imports Python straight off the working tree. There is no
-deploy step: half-finished code on disk under `backend/` or `compilation-agent/scripts/` can be
-picked up by a real build-and-upload within half an hour.
-
-Before Phase 1 (and *always* before a Phase 1b fan-out, where several agents leave the tree
-mid-edit at once), check what the change touches:
+Some checkouts are also a deployment: a timer, worker, or dev server imports code straight off the
+working tree with no build step, so half-finished code on disk can be executed for real within
+minutes. Check before Phase 1, and *always* before a Phase 1b fan-out, where several agents leave
+the tree mid-edit at once. The repo's `CLAUDE.md` should name the units; if it does not, look:
 
 ```bash
-systemctl list-timers --all --no-pager | grep -i cadence
+systemctl list-timers --all --no-pager        # plus any dev server or worker you started
 ```
 
-- **Touches nothing the services import** — frontend, docs, tests, a brand-new module nothing
-  imports yet: carry on, no precaution needed.
-- **Touches `backend/` or `compilation-agent/scripts/`**: tell the user the timer is live and offer
-  the two options — pause it for the duration
-  (`sudo systemctl stop video-compilation-cadence-dev.timer video-compilation-shorts-cadence-dev.timer`,
-  restarting it at Phase 3), or build in an isolated worktree via the `worktree` skill and merge
-  back. **Do not choose for them, and never leave a timer stopped without saying so.**
-- **A Phase 1b fan-out over backend code**: use a worktree. Up to six agents writing into the live
-  tree guarantees windows where imports are broken, and the cadence one-shot does not care that you
-  were mid-build.
+- **The change touches nothing those services import** — frontend, docs, tests, a new module
+  nothing imports yet: carry on, no precaution needed.
+- **It touches code they do import**: tell the user what is live and offer the two options — stop
+  the unit for the duration and restart it at Phase 3, or build in an isolated worktree and merge
+  back. **Do not choose for them, and never leave a service stopped without saying so.**
+- **A Phase 1b fan-out over that code**: use a worktree. Several agents writing into a live tree
+  guarantees windows where imports are broken, and a scheduled job does not care that you were
+  mid-build.
 
-Rollback is also sharper here. With no worktree there is nothing to delete: abandoning the work
-means `git revert`, or `git reset` to `BASE` — and **never `git reset --hard` in this tree**, which
-would destroy the pre-existing uncommitted brand-log edits along with your own.
+Rollback is sharper without a worktree, since there is nothing to delete: abandoning the work means
+`git revert`, or `git reset` to `BASE`. **Never `git reset --hard` in a tree that was already
+dirty** — it destroys the pre-existing uncommitted edits along with your own.
 
 Record `BASE` (the resolved SHA) in the journal goal line. Everything the loop reviews is
 `BASE...HEAD`.
@@ -164,14 +158,14 @@ go.
 ### Decide, then ask
 
 Estimate with `git grep`, not from vibes. **Eligible** when two of: ≥12 files touched; ≥3 distinct
-subsystems (`backend/api`, `backend/services`, `compilation-agent/scripts`, `frontend/src`, a BQ
-migration, `docs/adr`); ≥5 acceptance criteria of which ≥4 are testable without the others
-existing. Or, on its own: ≥8 near-identical units — a per-brand sweep, N call sites of one rename.
+subsystems (API, services, scripts, frontend, a schema migration, the ADR set); ≥5 acceptance
+criteria of which ≥4 are testable without the others existing. Or, on its own: ≥8 near-identical
+units — a sweep over N similar entities, N call sites of one rename.
 
 Then run the **shared-seam test, which overrides eligibility.** Two candidate slices are really one
 slice if both must change the same function signature, table schema, JSON contract, or shared
-resolver (`scripts/_pathresolve.py` — ADR 0040 made it the *only* path translator, so every caller
-hangs off one seam). Refuse to fan out when the criteria form a chain (B's test cannot be written
+resolver — where an ADR has made one module the single implementation of something, every caller
+hangs off that one seam. Refuse to fan out when the criteria form a chain (B's test cannot be written
 until A's schema exists), or when more than half the estimated diff sits in files two slices would
 touch. One deep behaviour change with many call sites is one piece of thinking; build it serially.
 
@@ -212,9 +206,10 @@ return out.filter(Boolean);
 
 Every brief carries: the slice's acceptance criteria verbatim; its **exclusive file glob** ("touch
 anything else and return `blocked` with the path"); the named test per criterion, written first,
-with its failing output pasted verbatim; `backend/venv/bin/python`; the `CLAUDE.md` lint baselines;
-never `npm run build`; and **run no git write command — Claude commits** (the index lock is a
-shared resource and concurrent commits race it).
+with its failing output pasted verbatim; the exact interpreter, test and lint commands from the
+repo's `CLAUDE.md`, including any pre-existing lint baseline it records and any build command it
+forbids; and **run no git write command — Claude commits** (the index lock is a shared resource and
+concurrent commits race it).
 
 Everything happens in the one repo worktree. Use `isolation:'worktree'` **only** when a slice runs
 a repo-wide mutating tool (formatter, codemod, migration) or two slices rewrite call sites in the
