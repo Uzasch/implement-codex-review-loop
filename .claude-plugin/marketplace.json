@@ -1,18 +1,22 @@
 {
-  "name": "skills",
-  "description": "Uzair's Claude Code plugins.",
+  "name": "uzasch",
   "owner": {
-    "name": "Uzair"
+    "name": "Uzair",
+    "url": "https://github.com/Uzasch"
   },
+  "description": "Uzair's agent skills, as an installable Claude Code plugin.",
   "plugins": [
     {
-      "name": "implement-codex-review-loop",
-      "source": "./plugins/implement-codex-review-loop",
-      "description": "Implement a PRD or set of issues, then harden it in a Claude<->Codex review loop until Codex approves.",
-      "version": "0.3.0",
-      "author": {
-        "name": "Uzair"
-      }
+      "name": "uzasch-skills",
+      "source": "./",
+      "description": "Uzair's agent skills — implement-and-review loops driven through Codex, and more to come.",
+      "category": "engineering",
+      "keywords": [
+        "engineering",
+        "skills",
+        "codex",
+        "code-review"
+      ]
     },
     {
       "name": "codex-orchestrator",
@@ -20,7 +24,7 @@
         "source": "url",
         "url": "https://github.com/alexzh3/codex-orchestrator.git"
       },
-      "description": "Upstream, unmodified: coordinate reusable monitored OpenAI Codex agents from Claude Code. MIT, by alexzh3. Listed here only so implement-codex-review-loop can auto-install it as a dependency.",
+      "description": "Upstream, unmodified: coordinate reusable monitored OpenAI Codex agents from Claude Code. MIT, by alexzh3. Listed here only so uzasch-skills can auto-install it as a dependency.",
       "author": {
         "name": "alexzh3"
       }

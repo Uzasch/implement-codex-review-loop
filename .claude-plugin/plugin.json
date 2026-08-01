@@ -1,0 +1,25 @@
+{
+  "name": "uzasch-skills",
+  "version": "1.0.0",
+  "description": "Uzair's agent skills — implement-and-review loops driven through Codex, and more to come.",
+  "author": {
+    "name": "Uzair"
+  },
+  "homepage": "https://github.com/Uzasch/skills",
+  "repository": "https://github.com/Uzasch/skills",
+  "license": "MIT",
+  "keywords": [
+    "engineering",
+    "skills",
+    "codex",
+    "code-review",
+    "implementation"
+  ],
+  "dependencies": [
+    "codex-orchestrator"
+  ],
+  "skills": [
+    "./skills/engineering/implement-codex-review-loop",
+    "./skills/engineering/implement"
+  ]
+}

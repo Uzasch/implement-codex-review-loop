@@ -30,7 +30,7 @@ Resolve these once and keep them for the whole run:
 # whichever marketplace pulled it in — its own when installed directly, or
 # `implement-codex-review-loop` when auto-installed as this plugin's dependency.
 PLUGIN_ROOT="$(ls -d ~/.claude/plugins/cache/*/codex-orchestrator/*/ 2>/dev/null | sort -V | tail -1)"
-SELF_ROOT="${CLAUDE_PLUGIN_ROOT:-$(ls -d ~/.claude/plugins/cache/*/implement-codex-review-loop/*/ 2>/dev/null | sort -V | tail -1)}"
+SELF_ROOT="${CLAUDE_PLUGIN_ROOT:-$(ls -d ~/.claude/plugins/cache/*/uzasch-skills/*/ 2>/dev/null | sort -V | tail -1)}"
 REPO="$(git rev-parse --show-toplevel)"
 ```
 
@@ -42,7 +42,7 @@ re-run every time:
 
 ```bash
 mkdir -p ~/.codex/skills
-ln -sfn "${SELF_ROOT%/}/skills/code-review-codex-loop" ~/.codex/skills/code-review-codex-loop
+ln -sfn "${SELF_ROOT%/}/skills/engineering/code-review-codex-loop" ~/.codex/skills/code-review-codex-loop
 test -r ~/.codex/skills/code-review-codex-loop/SKILL.md   # must pass before any review round
 ```
 
@@ -136,7 +136,7 @@ the Codex prompt rather than letting Codex invent one.
 ## Phase 1 — Implement
 
 Invoke the **`implement`** skill and follow it. If the Skill tool refuses it (it is marked
-user-invocable only), read `$SELF_ROOT/skills/implement/SKILL.md` and follow it verbatim instead.
+user-invocable only), read `$SELF_ROOT/skills/engineering/implement/SKILL.md` and follow it verbatim instead.
 
 That skill already ends with your own two-axis `/code-review` and a commit — let it. Codex must
 review *self-reviewed, committed* work, not a first draft.
@@ -263,7 +263,7 @@ Write `$EXEC_DIR/prompt.md`. Every round opens with:
 
 > Use your `code-review-codex-loop` skill for this review.
 
-That skill ships inside this plugin at `$SELF_ROOT/skills/code-review-codex-loop/` and was
+That skill ships inside this plugin at `$SELF_ROOT/skills/engineering/code-review-codex-loop/` and was
 symlinked into `~/.codex/skills/` during *Setup*, so Codex discovers it by name. Do not paste its
 contents into the prompt.
 
