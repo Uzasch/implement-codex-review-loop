@@ -1,15 +1,15 @@
 {
-  "name": "implement-codex-review-loop",
-  "description": "Claude<->Codex implement-and-review loop, packaged as a Claude Code plugin.",
+  "name": "skills",
+  "description": "Uzair's Claude Code plugins.",
   "owner": {
     "name": "Uzair"
   },
   "plugins": [
     {
       "name": "implement-codex-review-loop",
-      "source": "./",
+      "source": "./plugins/implement-codex-review-loop",
       "description": "Implement a PRD or set of issues, then harden it in a Claude<->Codex review loop until Codex approves.",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "author": {
         "name": "Uzair"
       }

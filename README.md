@@ -1,73 +1,34 @@
-# implement-codex-review-loop
+# skills
 
-A Claude Code plugin. Implement a PRD or a set of issues, then harden the result in a
-Claude↔Codex review loop: Claude implements and self-reviews, Codex reviews independently in one
-persistent session, Claude triages every finding against the ADRs and the originating issue, fixes
-what it accepts, and answers back. Repeats until Codex approves or the round cap is hit.
-
-## Install
+A Claude Code plugin marketplace. Add it once, install whatever you need from it.
 
 ```
-/plugin marketplace add https://github.com/Uzasch/implement-codex-review-loop.git
-/plugin install implement-codex-review-loop@implement-codex-review-loop
+/plugin marketplace add https://github.com/Uzasch/skills.git
 ```
 
-Use the full `https://` URL, not the `Uzasch/implement-codex-review-loop` shorthand. The shorthand
-resolves to `git@github.com:` and fails with `Permission denied (publickey)` on any machine without
-a GitHub SSH key, even though this repo is public. For the same reason the `codex-orchestrator`
-entry below uses a `url` source rather than a `github` one.
+Use the full `https://` URL, not the `Uzasch/skills` shorthand — the shorthand resolves to
+`git@github.com:` and fails with `Permission denied (publickey)` on any machine without a GitHub
+SSH key, even though this repo is public.
 
-That is the whole install. `codex-orchestrator` is declared as a dependency and is pulled in
-automatically — you do not add its marketplace or install it yourself.
+## Plugins
 
-Then run it in any repo:
-
-```
-/implement-codex-review-loop #76 #77
-/implement-codex-review-loop docs/prd/thing.md --rounds 3 --fanout
-```
-
-## Requirements
-
-Install brings in `codex-orchestrator` for you. You still need these on the machine:
-
-| Requirement | Why |
+| Plugin | What it does |
 | :--- | :--- |
-| `codex` CLI, authenticated | the review rounds are `codex exec` |
-| `gh` CLI, authenticated | Phase 1 pins the spec from the issue tracker |
-| `python3` | `codex_orch_tools.py state` / `validate` |
+| [`implement-codex-review-loop`](plugins/implement-codex-review-loop) | Implement a PRD or set of issues, then harden it in a Claude↔Codex review loop until Codex approves. |
 
-### Why codex-orchestrator is listed in this marketplace
+```
+/plugin install implement-codex-review-loop@skills
+```
 
-Dependencies resolve within the declaring plugin's own marketplace, so this marketplace carries a
-second entry for `codex-orchestrator` that points at
-[`alexzh3/codex-orchestrator`](https://github.com/alexzh3/codex-orchestrator) as its source. It is
-fetched unmodified from upstream — nothing is vendored or forked here, and it keeps receiving its
-own updates. It owns the journal contract, run initialization, and `codex_orch_tools.py`, which
-this skill defers to rather than reimplementing.
+## Adding a plugin to this marketplace
 
-## What ships here
+1. Create `plugins/<name>/` with a `.claude-plugin/plugin.json` and a `skills/` directory.
+2. Add an entry to `.claude-plugin/marketplace.json` with `"source": "./plugins/<name>"`.
+3. Run `claude plugin validate . --strict`.
 
-- `skills/implement-codex-review-loop/` — the orchestrator skill you invoke.
-- `skills/implement/` — the Phase 1 build skill it delegates to.
-- `skills/code-review-codex-loop/` — the **Codex-side** reviewer skill. Codex discovers it by name
-  from `~/.codex/skills/`, so the loop's *Setup* step symlinks it there on every run. Nothing to
-  install by hand.
-
-## Repo assumptions
-
-The skill carries hard-won rules from `Uzasch/video-compilation2.0` that are stated as specific
-facts about that repo, not as universals — the live-systemd-units hazard, the normally-dirty
-working tree (brand `log.md`, `MEMORY.md`, data backups), `docs/agents/issue-tracker.md`, the
-`CLAUDE.md` lint baselines, and `docs/adr/`. On another codebase they read as harmless context;
-edit them if they get in the way.
-
-The trunk is resolved from `origin/HEAD` and the skill stops to ask if that is unset. It never
-falls back to `main`.
-
-## Credits
-
-- `codex-orchestrator` — [alexzh3](https://github.com/alexzh3/codex-orchestrator), MIT. Fetched
-  from upstream as a dependency, not vendored.
-- `skills/implement/` — derived from [Matt Pocock's](https://github.com/mattpocock) engineering
-  skills, which this workflow's `/implement` and `/code-review` conventions come from.
+Plugins here may declare each other in `dependencies` and they resolve without extra configuration,
+since dependencies resolve within the declaring plugin's own marketplace. Depending on a plugin in
+a *different* marketplace requires `allowCrossMarketplaceDependenciesOn` here — which is why
+`codex-orchestrator` is listed as an entry in this marketplace, sourced unmodified from
+[upstream](https://github.com/alexzh3/codex-orchestrator), rather than being vendored or
+cross-referenced.
