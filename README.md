@@ -12,6 +12,9 @@ what it accepts, and answers back. Repeats until Codex approves or the round cap
 /plugin install implement-codex-review-loop@implement-codex-review-loop
 ```
 
+That is the whole install. `codex-orchestrator` is declared as a dependency and is pulled in
+automatically — you do not add its marketplace or install it yourself.
+
 Then run it in any repo:
 
 ```
@@ -21,19 +24,22 @@ Then run it in any repo:
 
 ## Requirements
 
+Install brings in `codex-orchestrator` for you. You still need these on the machine:
+
 | Requirement | Why |
 | :--- | :--- |
 | `codex` CLI, authenticated | the review rounds are `codex exec` |
 | `gh` CLI, authenticated | Phase 1 pins the spec from the issue tracker |
-| `codex-orchestrator` plugin | owns the journal contract, run init, and `codex_orch_tools.py` |
 | `python3` | `codex_orch_tools.py state` / `validate` |
 
-Install the orchestrator first — this skill hard-stops without it:
+### Why codex-orchestrator is listed in this marketplace
 
-```
-/plugin marketplace add alexzh3/codex-orchestrator
-/plugin install codex-orchestrator@codex-orchestrator
-```
+Dependencies resolve within the declaring plugin's own marketplace, so this marketplace carries a
+second entry for `codex-orchestrator` that points at
+[`alexzh3/codex-orchestrator`](https://github.com/alexzh3/codex-orchestrator) as its source. It is
+fetched unmodified from upstream — nothing is vendored or forked here, and it keeps receiving its
+own updates. It owns the journal contract, run initialization, and `codex_orch_tools.py`, which
+this skill defers to rather than reimplementing.
 
 ## What ships here
 
@@ -53,3 +59,10 @@ edit them if they get in the way.
 
 The trunk is resolved from `origin/HEAD` and the skill stops to ask if that is unset. It never
 falls back to `main`.
+
+## Credits
+
+- `codex-orchestrator` — [alexzh3](https://github.com/alexzh3/codex-orchestrator), MIT. Fetched
+  from upstream as a dependency, not vendored.
+- `skills/implement/` — derived from [Matt Pocock's](https://github.com/mattpocock) engineering
+  skills, which this workflow's `/implement` and `/code-review` conventions come from.

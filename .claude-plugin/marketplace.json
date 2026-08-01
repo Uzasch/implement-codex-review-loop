@@ -9,9 +9,20 @@
       "name": "implement-codex-review-loop",
       "source": "./",
       "description": "Implement a PRD or set of issues, then harden it in a Claude<->Codex review loop until Codex approves.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "Uzair"
+      }
+    },
+    {
+      "name": "codex-orchestrator",
+      "source": {
+        "source": "github",
+        "repo": "alexzh3/codex-orchestrator"
+      },
+      "description": "Upstream, unmodified: coordinate reusable monitored OpenAI Codex agents from Claude Code. MIT, by alexzh3. Listed here only so implement-codex-review-loop can auto-install it as a dependency.",
+      "author": {
+        "name": "alexzh3"
       }
     }
   ]

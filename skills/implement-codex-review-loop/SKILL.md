@@ -26,8 +26,11 @@ off. You stay the orchestrator for the whole run — same Claude session start t
 Resolve these once and keep them for the whole run:
 
 ```bash
-PLUGIN_ROOT="$(ls -d ~/.claude/plugins/cache/codex-orchestrator/codex-orchestrator/*/ | sort -V | tail -1)"
-SELF_ROOT="${CLAUDE_PLUGIN_ROOT:-$(ls -d ~/.claude/plugins/cache/implement-codex-review-loop/implement-codex-review-loop/*/ | sort -V | tail -1)}"
+# The `*` is the marketplace name, and it is deliberate: codex-orchestrator installs under
+# whichever marketplace pulled it in — its own when installed directly, or
+# `implement-codex-review-loop` when auto-installed as this plugin's dependency.
+PLUGIN_ROOT="$(ls -d ~/.claude/plugins/cache/*/codex-orchestrator/*/ 2>/dev/null | sort -V | tail -1)"
+SELF_ROOT="${CLAUDE_PLUGIN_ROOT:-$(ls -d ~/.claude/plugins/cache/*/implement-codex-review-loop/*/ 2>/dev/null | sort -V | tail -1)}"
 REPO="$(git rev-parse --show-toplevel)"
 ```
 
