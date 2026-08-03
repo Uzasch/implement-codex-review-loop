@@ -1,6 +1,6 @@
 {
   "name": "uzasch-skills",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Uzair's agent skills. /implement-codex-review-loop builds the work and hardens it in a Claude<->Codex review loop.",
   "author": {
     "name": "Uzair"
@@ -15,7 +15,6 @@
     "implementation"
   ],
   "dependencies": [
-    "codex-orchestrator",
     "mattpocock-skills"
   ],
   "skills": [

@@ -1,6 +1,6 @@
 ---
 name: code-review-codex-loop
-description: Independent two-axis review — Standards (does the change follow this repo's documented standards and the smell baseline?) and Spec (does it do what the originating issue or PRD asked?) — of a commit range or working diff, reporting to an orchestrating Claude agent. Use when the prompt hands over a base and head SHA plus a spec and expects a structured handoff ending in a VERDICT line, and across resumed rounds of a Claude-Codex review loop. Reviews only; never edits source.
+description: Independent two-axis review — Standards (does the change follow this repo's documented standards and the smell baseline?) and Spec (does it do what the originating issue or PRD asked?) — of a commit range or working diff, reporting to an orchestrating Claude agent. Use when the prompt hands over a base and head SHA plus a spec and expects a structured handoff ending in a VERDICT line, and across successive rounds of a Claude-Codex review loop. Reviews only; never edits source.
 ---
 
 # Code Review Codex (loop)
@@ -10,8 +10,9 @@ description: Independent two-axis review — Standards (does the change follow t
 You are the **independent reviewer** in a Claude↔Codex loop. Claude implements and self-reviews;
 you review its committed work. Claude then verifies each of your findings against the
 repository, its ADRs, and the originating issue, fixes what it accepts, tells you what it
-rejected and why, and resumes this same session for another round. The loop ends when you answer
-`VERDICT: APPROVED`.
+rejected and why, and opens a **fresh** review session for the next round. You are not resumed and
+carry no memory between rounds: everything you need — your own prior findings, and what Claude did
+about each one — arrives in the prompt. The loop ends when you answer `VERDICT: APPROVED`.
 
 Review runs on **two separate axes** — Standards and Spec — because a change can pass one and
 fail the other. Code that follows every convention but implements the wrong thing is a Spec
@@ -110,9 +111,9 @@ checker, its linter against the baseline — and report the real command and out
 
 ### Step 6 — Report
 
-Write the final message in the shape below. On a resumed round, read
-[`references/loop-protocol.md`](references/loop-protocol.md) **first** — it governs how prior
-findings are restated and when a Claude rejection must be accepted.
+Write the final message in the shape below. When the prompt carries a `## Prior findings`
+section, read [`references/loop-protocol.md`](references/loop-protocol.md) **first** — it governs
+how prior findings are restated and when a Claude rejection must be accepted.
 
 ## Do not report
 
@@ -181,6 +182,6 @@ VERDICT: APPROVED
 
 - [`smell-baseline.md`](references/smell-baseline.md) — the fixed Fowler smell set the Standards
   axis carries on top of whatever the repo documents. Read it during Step 3.
-- [`loop-protocol.md`](references/loop-protocol.md) — how to conduct rounds 2+ on a resumed
-  session: restating prior findings, accepting a grounded rejection, and converging. Read it at
-  the start of any resumed round.
+- [`loop-protocol.md`](references/loop-protocol.md) — how to conduct rounds 2+: restating prior
+  findings, accepting a grounded rejection, and converging. Read it whenever the prompt carries a
+  `## Prior findings` section.

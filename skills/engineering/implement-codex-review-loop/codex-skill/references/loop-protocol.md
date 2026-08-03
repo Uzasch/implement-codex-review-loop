@@ -1,9 +1,10 @@
 # Loop Protocol (rounds 2+)
 
-Claude resumes this same session for every round, so you carry the full history of what you
-already asked for. Read this before re-judging anything.
+Every round is a **fresh session**. You did not conduct the earlier review and hold no memory of
+it — the prompt's `## Prior findings` section is that review, quoted verbatim, and it is the only
+record you have. Treat it as your own prior work, and read this before re-judging anything.
 
-Each resumed prompt tells you: the new commit SHAs, the new `base...head` range, and — per prior
+The prompt also tells you: the new commit SHAs, the new `base...head` range, and — per prior
 finding — either `FIXED in <sha>` or `REJECTED: <reason> (<citation>)`.
 
 ## Re-judging prior findings

@@ -15,17 +15,19 @@ SSH key, even though this repo is public.
 
 ### engineering
 
-**`/implement-codex-review-loop <issue #s | PRD path> [--rounds N] [--base ref] [--fanout]`**
+**`/implement-codex-review-loop <issue #s | PRD path> [--rounds N] [--fanout]`**
 
 Matt Pocock's `/implement` with two things added: a **Codex review loop**, and an **orchestrator
 for specs too big for one context**.
 
 - **Implement** — calls his `/implement` unchanged, which runs `/tdd` at the seams and ends in his
   two-axis `/code-review` and a commit. Nothing is reimplemented here; that skill owns the build.
-- **Codex loop** — Codex reviews the committed diff independently, in one persistent session that
-  remembers what it already asked for. Claude triages every finding against the ADRs and the
-  originating issue, fixes what it accepts, and answers back. Repeats until Codex approves or the
-  round cap is hit. Claude's own self-review is deliberately withheld from Codex — a primed
+- **Codex loop** — Codex reviews the committed diff independently, in a **fresh session every
+  round**. Continuity is carried in the prompt — the prior findings verbatim, plus what Claude did
+  about each — rather than in a resumed thread, so the reviewer's inputs stay inspectable and
+  correctable instead of living as hidden state. Claude triages every finding against the ADRs and
+  the originating issue, fixes what it accepts, and answers back. Repeats until Codex approves or
+  the round cap is hit. Claude's own self-review is deliberately withheld from round 1 — a primed
   reviewer is not an independent one.
 - **Orchestrator (ultracode)** — a spec too large for one context is fanned out across parallel
   agents via the Workflow tool, behind a size gate, with a slice map and a seams list so
@@ -35,12 +37,14 @@ for specs too big for one context**.
 
 Ends with a drift report: everything built beyond the issue and beyond the ADRs.
 
-Install `uzasch-skills` and both dependencies come with it: `mattpocock-skills` for the build and
-review skills, `codex-orchestrator` for the journal contract and Codex process control. You do not
-add either marketplace yourself.
+Install `uzasch-skills` and `mattpocock-skills` comes with it, for the build and review skills. You
+do not add that marketplace yourself.
 
-Phase 1 is 14 lines because his `/implement` does the work. The other ~480 are the Codex loop, the
-fan-out, and the orchestration contract — the parts he does not have.
+Phase 1 is a dozen lines because his `/implement` does the work. The rest is the Codex loop and the
+fan-out — the parts he does not have. There is no journal, no run ledger and no orchestration
+contract: each round is a directory holding `prompt.md`, `handoff.md` and `events.jsonl`, and the
+only durable state is a flat `findings.md` of verdicts, which exists because a rejection reason has
+to go back to the next reviewer verbatim.
 
 `codex-skill/` inside it is the **Codex-side** reviewer, not a Claude skill. Codex discovers it by
 name from `~/.codex/skills/`, so the loop symlinks it there during setup. Nothing to install by
@@ -48,8 +52,8 @@ hand, and it never appears in Claude's skill picker.
 
 ## Requirements
 
-`codex-orchestrator` and `mattpocock-skills` are declared dependencies and install automatically.
-You also need the `codex` CLI (authenticated), `gh`, and `python3` on the machine.
+`mattpocock-skills` is a declared dependency and installs automatically. You also need the `codex`
+CLI (authenticated) and `gh` on the machine.
 
 ## Adding a skill
 
@@ -67,16 +71,13 @@ unshipped until you list it.
 
 Nothing hardcoded — the skill names no repo, branch, service, or interpreter. It reads them:
 
-- **Trunk** from `origin/HEAD`, and it stops to ask when that is unset. It never infers the trunk
-  from a branch name and never falls back to `main`/`master` — a repo can carry an abandoned `main`
-  next to a differently-named default branch, and diffing against the wrong one hands the reviewer
-  months of unrelated commits.
 - **Interpreter, test, lint and forbidden build commands** from the repo's `CLAUDE.md`, including
   any pre-existing lint baseline it records.
 - **Issues** from `docs/agents/issue-tracker.md` if present, otherwise `gh` / the PRD path you pass.
-- **Live services** — if a timer, worker, or dev server runs off the working tree, the skill offers
-  to stop it or build in a worktree rather than deciding for you. Name those units in your
-  `CLAUDE.md` so it does not have to guess.
+The skill does not create branches or worktrees and does not resolve a trunk to diff against. You
+put it in the tree you want built — a worktree you made, or a branch you are already on — and it
+takes `HEAD` at the moment it starts as the review base, or a commit you name. Nothing is ever
+compared against `main` on its own initiative.
 
 ## Credits
 
@@ -84,6 +85,3 @@ The build and review are [Matt Pocock's](https://github.com/mattpocock/skills) `
 `/tdd` and `/code-review` (MIT), installed from upstream and called unchanged. This repo adds the
 Codex loop and the fan-out around them. `codex-skill/references/smell-baseline.md` is the one
 derived file, carried because Codex cannot read Claude's skills.
-
-`codex-orchestrator` is [alexzh3's](https://github.com/alexzh3/codex-orchestrator), MIT, fetched
-from upstream as a dependency rather than vendored.

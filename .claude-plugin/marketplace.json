@@ -19,17 +19,6 @@
       ]
     },
     {
-      "name": "codex-orchestrator",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/alexzh3/codex-orchestrator.git"
-      },
-      "description": "Upstream, unmodified: coordinate reusable monitored OpenAI Codex agents from Claude Code. MIT, by alexzh3. Listed here only so uzasch-skills can auto-install it as a dependency.",
-      "author": {
-        "name": "alexzh3"
-      }
-    },
-    {
       "name": "mattpocock-skills",
       "source": {
         "source": "url",
